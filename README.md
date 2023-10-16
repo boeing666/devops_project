@@ -1,0 +1,1 @@
+Ansible script to create k8s cluster via qemu vm's
