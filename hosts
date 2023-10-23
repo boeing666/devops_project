@@ -1,0 +1,24 @@
+[host_machine]
+127.0.0.1 ansible_connection=local
+
+[masters]
+192.168.30.2
+192.168.30.3
+192.168.30.4
+
+[workers]
+192.168.30.5
+192.168.30.6
+192.168.30.7
+
+[haproxy]
+192.168.30.8
+
+[cert_nodes:children]
+masters
+haproxy
+
+[all:vars]
+ansible_user='denis'
+ansible_ssh_private_key_file='/home/disa/ansible-qemu-kvm/urfu_key'
+ansible_ssh_common_args='-o ServerAliveInterval=5 -o StrictHostKeyChecking=no'

@@ -1,0 +1,5 @@
+- name: Prepare host node and create vm's
+  become: yes
+  hosts: host_machine
+  roles:
+    - roles/qemu
