@@ -10,3 +10,14 @@
   include_tasks: "{{ item }}"
   loop:
     - install_kvm.yml
+    - network.yml
+
+- name: Create and Configure Virtual Machines
+  include_tasks: vm.yml
+  loop: "{{ virtual_machines }}"
+  loop_control:
+    loop_var: vm
+
+- name: wait to create vm's
+  pause:
+    seconds: 10
