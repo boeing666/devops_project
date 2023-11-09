@@ -1,0 +1,9 @@
+---
+- name: Set timezone
+  ansible.builtin.timezone:
+    name: "Asia/Yekaterinburg"
+
+- name: Install HAProxy
+  apt:
+    name: haproxy
+    state: present

@@ -3,3 +3,9 @@
   hosts: host_machine
   roles:
     - roles/qemu
+
+- name: Preparation haproxy node
+  become: yes
+  hosts: haproxy
+  roles:
+    - roles/haproxy
