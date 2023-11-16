@@ -1,0 +1,27 @@
+---
+- name: Collect IP addresses from cert_nodes
+  set_fact:
+    cert_nodes_ips: "{{ groups['cert_nodes'] | join(',') }}"
+
+- name: Install golang-cfssl
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - golang-cfssl
+
+- name: Remove old certs
+  shell: rm -rf "{{ role_path }}/files/*"
+
+- name: Generate certs1
+  shell: cd {{ role_path }}/files && cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+
+- name: Generate certs2
+  shell: |
+    cd {{ role_path }}/files && cfssl gencert \
+    -ca=ca.pem \
+    -ca-key=ca-key.pem \
+    -config=ca-config.json \
+    -hostname={{ cert_nodes_ips }},127.0.0.1,kubernetes.default \
+    -profile=kubernetes kubernetes-csr.json | \
+    cfssljson -bare kubernetes

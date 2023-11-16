@@ -4,6 +4,12 @@
   roles:
     - roles/qemu
 
+- name: Generate Certs
+  become: yes
+  hosts: host_machine
+  roles:
+    - roles/certs_gen
+
 - name: Preparation haproxy node
   become: yes
   hosts: haproxy
