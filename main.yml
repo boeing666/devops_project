@@ -15,3 +15,9 @@
   hosts: haproxy
   roles:
     - roles/haproxy
+
+- name: Preparation master and work nodes
+  become: yes
+  hosts: masters, workers
+  roles:
+    - roles/common

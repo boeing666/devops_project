@@ -1,0 +1,41 @@
+﻿---
+- name: Add Docker’s official GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+    state: present
+    filename: docker
+    update_cache: yes
+
+- name: Add devel:kubic:libcontainers:stable.list repository
+  blockinfile:
+    create: true
+    path: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    block: |
+      deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
+
+- name: Add devel:kubic:libcontainers:stable:cri-o:1.28.list repository
+  blockinfile:
+    create: true
+    path: "/etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:1.28.list"
+    block: |
+      deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/1.28/xUbuntu_20.04/ /
+
+- name: Add key for devel:kubic:libcontainers:stable:cri-o repository
+  shell: "curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:1.28/xUbuntu_20.04/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -"
+
+- name: Add key for devel:kubic:libcontainers:stable repository
+  shell: "curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -"
+
+- name: Add Kubernetes repository GPG key and repository
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/kubernetes-apt-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+- name: Update apt package cache
+  apt:
+    update_cache: yes
