@@ -1,0 +1,63 @@
+---
+- name: download etcd
+  shell: wget https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-linux-amd64.tar.gz
+  args:
+    chdir: /tmp
+
+- name: unzip etcd
+  shell: tar xvzf /tmp/etcd-v3.5.11-linux-amd64.tar.gz
+  args:
+    chdir: /tmp
+
+- name: install etcd
+  shell: sudo mv /tmp/etcd-v3.5.11-linux-amd64/etcd* /usr/local/bin/
+
+- name: Clean up temporary files
+  file:
+    path: /tmp/etcd*
+    state: absent
+
+- name: Ensure etcd directory exists
+  file:
+    path: /etc/etcd
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+    
+- name: Ensure var etcd directory exists
+  file:
+    path: /var/lib/etcd
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+    
+- name: Copy SSL cert files
+  copy: src={{ playbook_dir }}/roles/certs_gen/files/{{ item }} dest=/etc/etcd/{{ item }} mode=600
+  with_items:
+    - ca.pem
+    - kubernetes.pem
+    - kubernetes-key.pem
+
+- name: Copy etcd configuration file
+  template:
+    src: etcd.service.j2
+    dest: "/etc/systemd/system/etcd.service"
+    mode: 0755
+    owner: root
+    group: root
+
+- name: Reload systemd
+  command: "systemctl daemon-reload"
+
+- name: Start etcd service
+  service:
+    name: etcd
+    state: started
+    enabled: yes
+
+- name: Restart etcd
+  service:
+    name: etcd
+    state: restarted

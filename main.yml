@@ -21,3 +21,9 @@
   hosts: masters, workers
   roles:
     - roles/common
+    
+- name: Install k8s and create etcd cluster
+  become: yes
+  hosts: masters
+  roles:
+    - roles/master_nodes
