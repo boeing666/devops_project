@@ -27,3 +27,9 @@
   hosts: masters
   roles:
     - roles/master_nodes
+
+- name: Create k8s cluster
+  become: yes
+  hosts: masters
+  roles:
+    - roles/k8s_cluster

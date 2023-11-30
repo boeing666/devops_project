@@ -1,0 +1,107 @@
+---
+- set_fact:
+    first_master_host: "{{ groups['masters'][0] }}"
+    second_master_host: "{{ groups['masters'][1] }}"
+    third_master_host: "{{ groups['masters'][2] }}"
+
+- name: Reset existing cluster
+  shell: kubeadm reset -f
+
+- name: Remove .kube in user home directory
+  shell: rm -rf .kube
+
+- name: Remove /etc/kubernetes/manifests directory
+  shell: rm -rf /etc/kubernetes/manifests
+
+- name: Remove /var/lib/etcd directory
+  shell: rm -rf /var/lib/etcd
+  
+- name: Copy k8s files
+  template:
+    src: templates/config.yaml.j2
+    dest: /etc/kubernetes/config.yaml
+
+- name: Initializing the k8s master node
+  command: kubeadm init --config=/etc/kubernetes/config.yaml
+  delegate_to: "{{ first_master_host }}"
+  run_once: yes
+ 
+- name: Create /etc/kubernetes/pki directory on other master nodes
+  ansible.builtin.file:
+    path: /etc/kubernetes/pki
+    state: directory
+  when: inventory_hostname != first_master_host
+  
+- name: Copy the certificates from host master to local
+  fetch:
+    src: "/etc/kubernetes/{{ item }}"
+    dest: "./k8s_certs/{{ item }}"
+    flat: yes
+  run_once: yes
+  when: inventory_hostname == first_master_host
+  with_items:
+    - pki/apiserver-kubelet-client.crt
+    - pki/apiserver-kubelet-client.key
+    - pki/ca.crt
+    - pki/ca.key
+    - pki/front-proxy-client.crt
+    - pki/front-proxy-client.key
+    - pki/front-proxy-ca.crt
+    - pki/front-proxy-ca.key
+    - pki/sa.key
+    - pki/sa.pub
+    - admin.conf
+
+- name: Move certificates to other master servers
+  copy:
+    src: "./k8s_certs/{{ item }}"
+    dest: "/etc/kubernetes/{{ item }}"
+  with_items:
+    - pki/apiserver-kubelet-client.crt
+    - pki/apiserver-kubelet-client.key
+    - pki/ca.crt
+    - pki/ca.key
+    - pki/front-proxy-client.crt
+    - pki/front-proxy-client.key
+    - pki/front-proxy-ca.crt
+    - pki/front-proxy-ca.key
+    - pki/sa.key
+    - pki/sa.pub
+    - admin.conf
+
+- name: Getting a host token
+  command: kubeadm token create --print-join-command
+  register: join_command
+  delegate_to: "{{ first_master_host }}"
+  run_once: yes
+  
+- name: Initializing the k8s other master nodes
+  command: "{{ join_command.stdout }} --control-plane"
+  when: inventory_hostname != first_master_host
+  
+- name: Create .kube directory in user's home
+  file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+
+- name: Copy admin.conf to user's .kube directory
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ ansible_env.HOME }}/.kube/config"
+    remote_src: yes
+
+#- name: Installing the network plugin
+#  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+- name: Save host token to a file
+  copy:
+    content: "{{ join_command.stdout }}"
+    dest: ./roles/workers/files/k8s_token.txt
+  delegate_to: localhost
+  run_once: yes
+
+- name: Restart kubelet service
+  service:
+    name: kubelet
+    daemon-reload: yes
+    state: restarted
