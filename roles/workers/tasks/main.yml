@@ -1,0 +1,38 @@
+---
+- name: Ensure var kubernetes/pki directory exists
+  file:
+    path: /etc/kubernetes/pki
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+#- name: Move certificates to other master servers
+#  copy:
+#    src: "./k8s_certs/{{ item }}"
+#    dest: "/etc/kubernetes/{{ item }}"
+#  with_items:
+#    - pki/apiserver-kubelet-client.crt
+#    - pki/apiserver-kubelet-client.key
+#    - pki/ca.crt
+#    - pki/ca.key
+#    - pki/front-proxy-client.crt
+#    - pki/front-proxy-client.key
+#    - pki/front-proxy-ca.crt
+#    - pki/front-proxy-ca.key
+#    - pki/sa.key
+#    - pki/sa.pub
+#    - admin.conf
+
+- name: Copy k8s join cmd
+  copy: src=files/k8s_token.txt dest=/tmp/k8s_token.txt mode=600
+
+- name: Execute master join comman
+  shell: "bash /tmp/k8s_token.txt"
+  
+#- name: Clean old token
+#  file:
+#    path: "{{ role_path }}/files/k8s_token.txt"
+#    state: absent
+#  run_once: yes
+#  delegate_to: localhost

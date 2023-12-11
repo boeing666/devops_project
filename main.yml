@@ -33,3 +33,9 @@
   hosts: masters
   roles:
     - roles/k8s_cluster
+
+- name: Connect worker nodes
+  become: yes
+  hosts: workers
+  roles:
+    - roles/workers
