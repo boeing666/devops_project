@@ -1,0 +1,26 @@
+---
+- name: Download Cilium CLI tar.gz file
+  get_url:
+    url: "https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz"
+    dest: "/tmp/cilium-linux-amd64.tar.gz"
+
+- name: Extract Cilium CLI binary
+  command: tar xzvfC /tmp/cilium-linux-amd64.tar.gz /usr/local/bin
+
+- name: Install Cilium
+  command: cilium install
+
+- name: Apply metallb service
+  command: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
+
+- name: Apply postgres-operator configmap
+  command: kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/configmap.yaml
+
+- name: Apply postgres-operator service account and RBAC
+  command: kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/operator-service-account-rbac.yaml
+
+- name: Deploy postgres-operator
+  command: kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/postgres-operator.yaml
+
+- name: Apply postgres-operator service
+  command: kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/api-service.yaml

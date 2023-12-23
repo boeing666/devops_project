@@ -21,7 +21,7 @@
   hosts: masters, workers
   roles:
     - roles/common
-    
+
 - name: Install k8s and create etcd cluster
   become: yes
   hosts: masters
@@ -33,6 +33,12 @@
   hosts: masters
   roles:
     - roles/k8s_cluster
+    
+- name: Install needed utilities for k8s cluster
+  become: yes
+  hosts: masters[0]
+  roles:
+    - roles/k8s_libs
 
 - name: Connect worker nodes
   become: yes
