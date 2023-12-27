@@ -1,0 +1,36 @@
+- name: Prepare Host Node
+  become: yes
+  hosts: host_machine
+  tasks:
+    - name: Shutdown VMs
+      shell: virsh shutdown {{ item }}
+      with_items:
+        - master1
+        - master2
+        - master3
+        - worker1
+        - worker2
+        - worker3
+        - haproxy
+      ignore_errors: yes
+
+    - name: wait to shutdown vm's
+      pause:
+        seconds: 10
+
+    - name: Undefine VMs and remove storage
+      shell: virsh undefine {{ item }} --remove-all-storage
+      with_items:
+        - master1
+        - master2
+        - master3
+        - worker1
+        - worker2
+        - worker3
+        - haproxy
+      ignore_errors: yes
+
+    - name: Remove /virt/vms/ directory
+      file:
+        path: /virt/vms/
+        state: absent
