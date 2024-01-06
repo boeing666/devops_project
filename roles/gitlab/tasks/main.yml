@@ -1,0 +1,22 @@
+---
+- name: download install script
+  command: curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+
+- name: chmod for get_helm.sh
+  command: chmod 700 get_helm.sh
+
+- name: Install helm
+  command: ./get_helm.sh
+
+- name: add gitlab repo
+  command: helm repo add gitlab https://charts.gitlab.io/
+
+- name: update helm repo
+  command: helm repo update
+
+- name: install gitlab
+  command: sudo helm upgrade --install gitlab -n gitlab gitlab/ \
+  --timeout 600s \
+  --set global.hosts.domain=192.168.0.5.sslip.io \
+  --set certmanager-issuer.email=e7w8eev090k8@mail.ru \
+  --set postgresql.image.tag=13.6.0
